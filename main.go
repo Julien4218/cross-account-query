@@ -45,7 +45,10 @@ func main() {
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Couldn't execute query, detail:%s", err))
 	}
-	for _, result := range result.Results {
+	maxResult := len(result.Results)
+	fmt.Println(fmt.Sprintf("Results(%d):", maxResult))
+	for index, result := range result.Results {
+		fmt.Println(fmt.Sprintf("Processing raw %d/%d:", index+1, maxResult))
 		record := NewRecord(result)
 		report.AddRow(record)
 
@@ -59,18 +62,19 @@ func main() {
 				log.Fatal(fmt.Sprintf("Couldn't load newrelic client, detail:%s", err))
 			}
 			query := replaceQueryFields(configColumn.Query, record)
-			subResult, err := client.Nrdb.Query(configColumn.AccountId, nrdb.NRQL(query))
-			if err != nil {
-				log.Fatal(fmt.Sprintf("Couldn't execute query, detail:%s", err))
-			}
-			if len(subResult.Results) > 0 {
-				record.Merge(subResult.Results[0])
+			if query != "" {
+				subResult, err := client.Nrdb.Query(configColumn.AccountId, nrdb.NRQL(query))
+				if err != nil {
+					log.Fatal(fmt.Sprintf("Couldn't execute query, detail:%s", err))
+				}
+				if len(subResult.Results) > 0 {
+					record.Merge(subResult.Results[0])
+				}
 			}
 		}
 
 	}
 
-	fmt.Println(fmt.Sprintf("Results(%d):", len(result.Results)))
 	fmt.Println(report)
 
 	fmt.Println("Done")
@@ -105,7 +109,7 @@ func replaceQueryFields(query string, record *Record) string {
 		key := strings.ReplaceAll(string(item), "env::", "")
 		value := record.GetField(key)
 		if value == "" {
-			log.Fatal(fmt.Sprintf("couldn't find field name:%s key:%s with record:%v", item, key, record.String()))
+			return ""
 		}
 		output = strings.ReplaceAll(output, string(item), value)
 	}

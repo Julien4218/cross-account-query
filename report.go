@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -67,6 +68,7 @@ func (r *Report) AddHeader(name string) {
 			return
 		}
 	}
+	fmt.Println(fmt.Sprintf("Adding header %s", name))
 	r.headers[len(r.headers)] = name
 }
 
