@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/newrelic/newrelic-client-go/pkg/nrdb"
 	yaml "gopkg.in/yaml.v2"
@@ -63,16 +64,24 @@ func main() {
 			}
 			query := replaceQueryFields(configColumn.Query, record)
 			if query != "" {
-				subResult, err := client.Nrdb.Query(configColumn.AccountId, nrdb.NRQL(query))
-				if err != nil {
-					log.Fatal(fmt.Sprintf("Couldn't execute query, detail:%s", err))
-				}
-				if len(subResult.Results) > 0 {
-					record.Merge(subResult.Results[0])
+				attempt := 1
+				maxAttempt := 10
+				for attempt < maxAttempt {
+					subResult, err := client.Nrdb.Query(configColumn.AccountId, nrdb.NRQL(query))
+					if err == nil {
+						if len(subResult.Results) > 0 {
+							record.Merge(subResult.Results[0])
+						}
+						break
+					}
+					if attempt == maxAttempt {
+						log.Fatal(fmt.Sprintf("Couldn't execute query, detail:%s", err))
+					}
+					time.Sleep(2 * time.Second)
+					attempt++
 				}
 			}
 		}
-
 	}
 
 	fmt.Println(report)
