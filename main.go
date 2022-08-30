@@ -48,7 +48,7 @@ func main() {
 	maxResult := len(result.Results)
 	fmt.Println(fmt.Sprintf("Results(%d):", maxResult))
 	for index, result := range result.Results {
-		fmt.Println(fmt.Sprintf("Processing raw %d/%d:", index+1, maxResult))
+		fmt.Println(fmt.Sprintf("Processing row %d/%d:", index+1, maxResult))
 		record := NewRecord(result)
 		report.AddRow(record)
 
