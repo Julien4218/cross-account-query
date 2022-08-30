@@ -31,3 +31,9 @@ columns:
     select_fields:
       - is_using_something_else:IsUsingSomethingElse
 ```
+
+# Run
+
+```bash
+go run . config.yml
+```
