@@ -77,8 +77,9 @@ func main() {
 					if attempt == maxAttempt {
 						log.Fatal(fmt.Sprintf("Couldn't execute query, detail:%s", err))
 					}
-					time.Sleep(2 * time.Second)
 					attempt++
+					log.Println(fmt.Sprintf("Error while executing, retrying attempt %d, detail:%s", attempt, err))
+					time.Sleep(2 * time.Second)
 				}
 			}
 		}
