@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/newrelic/newrelic-client-go/pkg/nrdb"
-	yaml "gopkg.in/yaml.v2"
 )
 
 func main() {
@@ -28,10 +27,13 @@ func main() {
 
 	fmt.Println(fmt.Sprintf("cross-account-query program. Got config fileName:%s", fileName))
 
-	config := readFile(fileName)
-	fmt.Println(fmt.Sprintf("Received %s", config))
-
-	report := NewReport()
+	appContext, err := Init(fileName)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+	config := appContext.Config
+	report := appContext.Report
 
 	for _, selectField := range config.Base.SelectFields {
 		report.AddHeader(selectField)
@@ -93,23 +95,6 @@ func main() {
 func displaySyntax() {
 	fmt.Println("cross-account-query program executes multiple account query and display results.")
 	fmt.Println("syntax: cross-account-query config.yml")
-}
-
-func readFile(filename string) *Config {
-	var config *Config = nil
-
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		log.Fatalf("couldn't read file %s detail:%v", filename, err)
-		return nil
-	}
-
-	err2 := yaml.Unmarshal([]byte(data), &config)
-	if err2 != nil {
-		log.Fatalf("error: %v", err)
-	}
-
-	return config
 }
 
 func replaceQueryFields(query string, record *Record) string {
