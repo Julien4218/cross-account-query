@@ -35,5 +35,6 @@ columns:
 # Run
 
 ```bash
+go test -v ./ ./...
 go run . config.yml
 ```

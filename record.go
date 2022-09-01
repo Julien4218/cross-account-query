@@ -1,8 +1,8 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"math"
 	"strings"
 )
@@ -12,6 +12,9 @@ type Record struct {
 }
 
 func NewRecord(result map[string]interface{}) *Record {
+	if result == nil {
+		result = make(map[string]interface{})
+	}
 	record := &Record{result: result}
 	return record
 }
@@ -27,7 +30,7 @@ func (r *Record) Merge(fetched map[string]interface{}) {
 
 func (r *Record) String() string {
 	output := "["
-	for key, _ := range r.result {
+	for key := range r.result {
 		if len(output) > 1 {
 			output += ","
 		}
@@ -38,33 +41,27 @@ func (r *Record) String() string {
 }
 
 func (r *Record) GetField(name string) string {
-	for key, _ := range r.result {
+	value, _ := r.GetFieldOrError(name)
+	return value
+}
+
+func (r *Record) GetFieldOrError(name string) (string, error) {
+	for key := range r.result {
 		lowerKey := strings.ToLower(key)
 		if strings.EqualFold(lowerKey, name) {
 			untyped := r.result[key]
 			switch untyped.(type) {
 			case int:
-				return fmt.Sprintf("%d", untyped.(int))
+				return fmt.Sprintf("%d", untyped.(int)), nil
 			case float64:
 				r2 := math.Round(r.result[key].(float64))
-				return fmt.Sprintf("%d", int(r2))
+				return fmt.Sprintf("%d", int(r2)), nil
 			case string:
-				return untyped.(string)
+				return untyped.(string), nil
 			default:
-				log.Fatal(fmt.Sprintf("Unknown cast type of %v", untyped))
+				return "", errors.New(fmt.Sprintf("Unknown cast type of %v", untyped))
 			}
 		}
 	}
-	return ""
-}
-
-func arrayContains(x string, array []string) bool {
-	if len(array) > 0 {
-		for _, item := range array {
-			if strings.EqualFold(x, item) {
-				return true
-			}
-		}
-	}
-	return false
+	return "", nil
 }
