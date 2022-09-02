@@ -16,6 +16,7 @@ type ConfigQuery struct {
 	NrURL        string   `yaml:"nr_url"`
 	Query        string   `yaml:"query"`
 	SelectFields []string `yaml:"select_fields"`
+	CanBatch     bool     `yaml:"can_batch"`
 }
 
 type ColumnQuery struct {
@@ -25,11 +26,6 @@ type ColumnQuery struct {
 	NrURL        string   `yaml:"nr_url"`
 	Query        string   `yaml:"query"`
 	SelectFields []string `yaml:"select_fields"`
-}
-
-func NewConfig(start string, value string) (*Config, error) {
-	record := &Config{}
-	return record, nil
 }
 
 func (r *ConfigQuery) String() string {

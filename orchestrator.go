@@ -33,26 +33,45 @@ func (o *Orchestrator) Execute() error {
 
 	o.addAllHeaders()
 
-	records, err := o.query(o.appContext.Config.Base, 0, nil)
+	records, err := o.query(o.appContext.Config.Base, report.rows)
 	if err != nil {
 		return err
 	}
-	maxResult := len(records)
-	fmt.Println(fmt.Sprintf("Results(%d):", maxResult))
-	for index, record := range records {
-		fmt.Println(fmt.Sprintf("Processing row %d/%d:", index+1, maxResult))
+	fmt.Println(fmt.Sprintf("Results(%d):", len(records)))
+	for rindex, record := range records {
+		fmt.Println(fmt.Sprintf("Creating row %d/%d:", rindex+1, len(records)))
 		report.AddRow(record)
+	}
 
-		for _, configColumn := range config.Columns {
-			columnRecords, err := o.query(configColumn, maxResult, record)
+	for cindex, configColumn := range config.Columns {
+		fmt.Println(fmt.Sprintf("Processing column %d/%d:", cindex+1, len(config.Columns)))
+		if configColumn.CanBatch {
+			columnRecords, err := o.query(configColumn, report.rows)
 			if err != nil {
 				return err
 			}
-			if len(columnRecords) > 0 {
-				record.Merge(columnRecords[0].result)
+			for _, columnRecord := range columnRecords {
+				add := NewRecord(columnRecord.result)
+				keys := o.getMatchingColumns(configColumn)
+				found := report.FindMatchingAll(keys, add)
+				if found != nil {
+					found.Merge(add.result)
+				}
+			}
+		} else {
+			for rindex, record := range report.rows {
+				fmt.Println(fmt.Sprintf("Processing row %d/%d:", rindex+1, len(report.rows)))
+				columnRecords, err := o.query(configColumn, []*Record{record})
+				if err != nil {
+					return err
+				}
+				if len(columnRecords) > 0 {
+					record.Merge(columnRecords[0].result)
+				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -67,32 +86,33 @@ func (o *Orchestrator) addAllHeaders() {
 	}
 }
 
-func (o *Orchestrator) query(config *ConfigQuery, maxResult int, record *Record) ([]*Record, error) {
+func (o *Orchestrator) query(config *ConfigQuery, records []*Record) ([]*Record, error) {
 	client, err := o.clientFactory.GetOrCreate(config)
 	if err != nil {
 		return []*Record{}, errors.New(fmt.Sprintf("Couldn't load newrelic client, detail:%s", err))
 	}
 
-	records := []*Record{}
-	query := config.Query
+	output := []*Record{}
+	query := o.getQueryReplacedFields(config, records)
 	if query != "" {
-		if record != nil {
-			query = o.replaceQueryFields(config.Query, record)
-		}
 		attempt := 1
 		maxAttempt := 10
 		for attempt < maxAttempt {
+			fmt.Println(fmt.Sprintf("Executing query:%s", query))
 			results, err := client.Nrdb.Query(config.AccountId, nrdb.NRQL(query))
 			if err == nil {
 				if len(results.Results) > 0 {
 					for _, result := range results.Results {
-						records = append(records, NewRecord(result))
+						record := NewRecord(result)
+						// Facet bug
+						// record.Merge(results.OtherResult)
+						output = append(output, record)
 					}
 				}
 				break
 			}
 			if attempt == maxAttempt {
-				return records, errors.New(fmt.Sprintf("Couldn't execute query, detail:%s", err))
+				return output, errors.New(fmt.Sprintf("Couldn't execute query, detail:%s", err))
 			}
 			attempt++
 			log.Println(fmt.Sprintf("Error while executing, retrying attempt %d, detail:%s", attempt, err))
@@ -100,20 +120,39 @@ func (o *Orchestrator) query(config *ConfigQuery, maxResult int, record *Record)
 		}
 	}
 
-	return records, nil
+	return output, nil
 }
 
-func (o *Orchestrator) replaceQueryFields(query string, record *Record) string {
+func (o *Orchestrator) getQueryReplacedFields(config *ConfigQuery, records []*Record) string {
+	query := config.Query
 	output := query
-	re := regexp.MustCompile(`env::(\w+)`)
-	for _, item := range re.FindAll([]byte(query), -1) {
-		key := strings.ReplaceAll(string(item), "env::", "")
-		value := record.GetField(key)
+	keys := o.getMatchingColumns(config)
+	for _, key := range keys {
+		value := ""
+		for _, record := range records {
+			add := record.GetField(key)
+			if add != "" {
+				if value != "" {
+					value += ","
+				}
+				value += add
+			}
+		}
 		if value == "" {
 			return ""
 		}
-		output = strings.ReplaceAll(output, string(item), value)
+		output = strings.ReplaceAll(output, fmt.Sprintf("env::%s", key), value)
 	}
 
 	return output
+}
+
+func (o *Orchestrator) getMatchingColumns(config *ConfigQuery) []string {
+	re := regexp.MustCompile(`env::(\w+)`)
+	keys := []string{}
+	for _, item := range re.FindAll([]byte(config.Query), -1) {
+		key := strings.ReplaceAll(string(item), "env::", "")
+		keys = append(keys, key)
+	}
+	return keys
 }

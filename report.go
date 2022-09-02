@@ -72,6 +72,35 @@ func (r *Report) AddHeader(name string) {
 	r.headers[len(r.headers)] = name
 }
 
+func (r *Report) LastRow() *Record {
+	if len(r.rows) > 0 {
+		return r.rows[len(r.rows)-1]
+	}
+	return nil
+}
+
+func (r *Report) FindMatchingAll(keys []string, record *Record) *Record {
+	if len(keys) == 0 || r.rows == nil {
+		return nil
+	}
+	for _, row := range r.rows {
+		found := false
+		for _, key := range keys {
+			if row.GetField(key) == record.GetField(key) {
+				found = true
+				continue
+			} else {
+				found = false
+				break
+			}
+		}
+		if found {
+			return row
+		}
+	}
+	return nil
+}
+
 func (r *Report) AddRow(record *Record) {
 	r.rows = append(r.rows, record)
 
