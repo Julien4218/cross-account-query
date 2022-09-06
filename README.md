@@ -13,7 +13,6 @@ base:
   api_key: NRAK-ABC**********
   account_id: 123456789
   region: staging
-  nr_url: staging-api.newrelic.com/graphql
   query: SELECT something with NRQL
   select_fields:
     - account_id:AccountID
@@ -26,7 +25,6 @@ columns:
     api_key: NRAK-ABC**********
     account_id: 987654321
     region: us
-    nr_url: api.newrelic.com/graphql
     query: SELECT something else with NRQL
     select_fields:
       - is_using_something_else:IsUsingSomethingElse
@@ -46,7 +44,6 @@ base:
   api_key: NRAK-ABC**********
   account_id: 123456789
   region: staging
-  nr_url: staging-api.newrelic.com/graphql
   query: SELECT something with NRQL
   select_fields:
     - account_id:AccountID
@@ -59,7 +56,6 @@ columns:
     api_key: NRAK-ABC**********
     account_id: 987654321
     region: us
-    nr_url: api.newrelic.com/graphql
     can_batch: true
     query: FROM MyTable SELECT uniqueCount(1) as 'has_data', min(customer_user_id) as 'customer_user_id' WHERE customer_user_id in (env::customer_user_id) SINCE 1 week ago facet nrAccountId as 'account_id'
     select_fields:
