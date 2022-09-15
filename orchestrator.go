@@ -130,29 +130,35 @@ func (o *Orchestrator) getQueryReplacedFields(config *ConfigQuery, records []*Re
 	for _, key := range keys {
 		value := ""
 		for _, record := range records {
-			add := record.GetField(key)
+			add := record.GetField(key.KeyName)
 			if add != "" {
 				if value != "" {
 					value += ","
 				}
-				value += add
+				replaced := key.Replace(add)
+				value += replaced
 			}
 		}
 		if value == "" {
 			return ""
 		}
-		output = strings.ReplaceAll(output, fmt.Sprintf("env::%s", key), value)
+		output = strings.ReplaceAll(output, fmt.Sprintf("%s%s", key.Match, key.KeyName), value)
 	}
 
 	return output
 }
 
-func (o *Orchestrator) getMatchingColumns(config *ConfigQuery) []string {
+func (o *Orchestrator) getMatchingColumns(config *ConfigQuery) []*MatchKey {
+	keys := []*MatchKey{}
 	re := regexp.MustCompile(`env::(\w+)`)
-	keys := []string{}
 	for _, item := range re.FindAll([]byte(config.Query), -1) {
 		key := strings.ReplaceAll(string(item), "env::", "")
-		keys = append(keys, key)
+		keys = append(keys, NewMatchKey("env::", key))
+	}
+	re = regexp.MustCompile(`add1UnixDay::(\w+)`)
+	for _, item := range re.FindAll([]byte(config.Query), -1) {
+		key := strings.ReplaceAll(string(item), "add1UnixDay::", "")
+		keys = append(keys, NewMatchKey("add1UnixDay::", key))
 	}
 	return keys
 }

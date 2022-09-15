@@ -79,14 +79,14 @@ func (r *Report) LastRow() *Record {
 	return nil
 }
 
-func (r *Report) FindMatchingAll(keys []string, record *Record) *Record {
+func (r *Report) FindMatchingAll(keys []*MatchKey, record *Record) *Record {
 	if len(keys) == 0 || r.rows == nil {
 		return nil
 	}
 	for _, row := range r.rows {
 		found := false
 		for _, key := range keys {
-			if row.GetField(key) == record.GetField(key) {
+			if row.GetField(key.KeyName) == record.GetField(key.KeyName) {
 				found = true
 				continue
 			} else {
