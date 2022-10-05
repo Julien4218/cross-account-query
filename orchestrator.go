@@ -50,6 +50,8 @@ func (o *Orchestrator) Execute() error {
 			if err != nil {
 				return err
 			}
+			// DEBUG
+			// fmt.Printf("columnRecords:%v", columnRecords)
 			for _, columnRecord := range columnRecords {
 				add := NewRecord(columnRecord.result)
 				keys := o.getMatchingColumns(configColumn)

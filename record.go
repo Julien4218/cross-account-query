@@ -35,8 +35,10 @@ func (r *Record) String() string {
 			output += ","
 		}
 		output += key
+		// DEBUG
+		// output += fmt.Sprintf("%s:%s", key, r.GetField(key))
 	}
-	output += "]"
+	output += "]\n"
 	return output
 }
 
