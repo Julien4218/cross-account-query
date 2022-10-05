@@ -86,7 +86,9 @@ func (r *Report) FindMatchingAll(keys []*MatchKey, record *Record) *Record {
 	for _, row := range r.rows {
 		found := false
 		for _, key := range keys {
-			if row.GetField(key.KeyName) == record.GetField(key.KeyName) {
+			rowValue := row.GetField(key.KeyName)
+			recordValue := record.GetField(key.KeyName)
+			if rowValue != "" && recordValue != "" && rowValue == recordValue {
 				found = true
 				continue
 			} else {

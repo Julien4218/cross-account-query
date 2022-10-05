@@ -68,6 +68,8 @@ func (o *Orchestrator) Execute() error {
 					return err
 				}
 				if len(columnRecords) > 0 {
+					// DEBUG
+					// fmt.Printf("\nMerging %v\n", columnRecords[0].result)
 					record.Merge(columnRecords[0].result)
 				}
 			}
