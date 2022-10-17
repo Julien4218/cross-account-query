@@ -34,7 +34,7 @@ func readFile(filename string) (*Config, error) {
 
 	err2 := yaml.Unmarshal([]byte(data), &config)
 	if err2 != nil {
-		return nil, errors.New(fmt.Sprintf("couldn't unmarshal yaml %s detail:%v", filename, err))
+		return nil, errors.New(fmt.Sprintf("couldn't unmarshal yaml %s detail:%v", filename, err2))
 	}
 
 	return config, nil
