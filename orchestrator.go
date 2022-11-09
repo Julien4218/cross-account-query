@@ -53,7 +53,7 @@ func (o *Orchestrator) Execute() error {
 			// DEBUG
 			// fmt.Printf("columnRecords:%v", columnRecords)
 			for _, columnRecord := range columnRecords {
-				add := NewRecord(columnRecord.result)
+				add := NewRecord(columnRecord.result, columnRecord.facetNames)
 				keys := o.getMatchingColumns(configColumn)
 				found := report.FindMatchingAll(keys, add)
 				if found != nil {
@@ -107,7 +107,7 @@ func (o *Orchestrator) query(config *ConfigQuery, records []*Record) ([]*Record,
 			if err == nil {
 				if len(results.Results) > 0 {
 					for _, result := range results.Results {
-						record := NewRecord(result)
+						record := NewRecord(result, results.Metadata.Facets)
 						// Facet bug
 						// record.Merge(results.OtherResult)
 						output = append(output, record)
