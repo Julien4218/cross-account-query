@@ -154,10 +154,10 @@ func (o *Orchestrator) getQueryReplacedFields(config *ConfigQuery, records []*Re
 
 func (o *Orchestrator) getMatchingColumns(config *ConfigQuery) []*MatchKey {
 	keys := []*MatchKey{}
-	re := regexp.MustCompile(`env::(\w+)`)
+	re := regexp.MustCompile(`data::(\w+)`)
 	for _, item := range re.FindAll([]byte(config.Query), -1) {
-		key := strings.ReplaceAll(string(item), "env::", "")
-		keys = append(keys, NewMatchKey("env::", key))
+		key := strings.ReplaceAll(string(item), "data::", "")
+		keys = append(keys, NewMatchKey("data::", key))
 	}
 	re = regexp.MustCompile(`add1UnixDay::(\w+)`)
 	for _, item := range re.FindAll([]byte(config.Query), -1) {

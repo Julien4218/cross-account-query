@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -32,10 +34,34 @@ func readFile(filename string) (*Config, error) {
 		return nil, errors.New(fmt.Sprintf("couldn't read file %s detail:%v", filename, err))
 	}
 
-	err2 := yaml.Unmarshal([]byte(data), &config)
+	content := string(data)
+	replaced, err := replaceEnvVar(content)
+	if err != nil {
+		return nil, err
+	}
+
+	err2 := yaml.Unmarshal([]byte(replaced), &config)
 	if err2 != nil {
 		return nil, errors.New(fmt.Sprintf("couldn't unmarshal yaml %s detail:%v", filename, err2))
 	}
 
 	return config, nil
+}
+
+func replaceEnvVar(value string) (string, error) {
+	if len(value) == 0 {
+		return "", nil
+	}
+	result := value
+	re := regexp.MustCompile(`env::(\w+)`)
+	for found := re.Find([]byte(result)); found != nil; found = re.Find([]byte(result)) {
+		match := string(found)
+		key := strings.ReplaceAll(match, "env::", "")
+		replaced := os.Getenv(key)
+		if replaced == "" {
+			return "", errors.New(fmt.Sprintf("Environment variable %s is defined but not found, cannot replace", match))
+		}
+		result = strings.ReplaceAll(result, match, replaced)
+	}
+	return result, nil
 }
