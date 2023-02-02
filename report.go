@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Report struct {
@@ -18,6 +20,66 @@ func NewReport() *Report {
 		rows:    []*Record{},
 	}
 	return r
+}
+
+func (r *Report) Json() string {
+	output := ""
+	for _, row := range r.rows {
+		rowOutput := ""
+		for i := 0; i < len(r.headers); i++ {
+			header := r.headers[i]
+			colName := getHeaderColumnName(header)
+			aliasName := getHeaderColumnAlias(header)
+			value := row.GetField(colName)
+			if value != "" {
+				if rowOutput != "" {
+					rowOutput += ","
+				}
+				rowOutput += "\""
+				if aliasName != "" {
+					rowOutput += aliasName
+				} else {
+					rowOutput += colName
+				}
+				rowOutput += "\":"
+				isNative := isValueNative(value)
+				if !isNative {
+					rowOutput += "\""
+				}
+				if colName == "timestamp" && aliasName == "" {
+					seconds, _ := strconv.ParseInt(value, 10, 64)
+					unix := time.UnixMilli(seconds)
+					value = unix.Format(time.RFC3339)
+				}
+				rowOutput += value
+				if !isNative {
+					rowOutput += "\""
+				}
+			}
+		}
+		if rowOutput != "" {
+			if output != "" {
+				output += ",\n"
+			}
+			output += "{" + rowOutput + "}"
+		}
+	}
+	if output != "" {
+		output = "[\n" + output + "\n]\n"
+	}
+	return output
+}
+
+func isValueNative(value string) bool {
+	_, err := strconv.ParseInt(value, 10, 64)
+	if err == nil {
+		return true
+	}
+	_, err = strconv.ParseBool(value)
+	if err == nil {
+		return true
+	}
+	return false
 }
 
 func (r *Report) String() string {
@@ -68,7 +130,7 @@ func (r *Report) AddHeader(name string) {
 			return
 		}
 	}
-	fmt.Println(fmt.Sprintf("Adding header %s", name))
+	log.Debugf(fmt.Sprintf("Adding header %s", name))
 	r.headers[len(r.headers)] = name
 }
 

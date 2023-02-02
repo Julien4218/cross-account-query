@@ -3,10 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/newrelic-client-go/pkg/nrdb"
 )
@@ -37,14 +38,14 @@ func (o *Orchestrator) Execute() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(fmt.Sprintf("Results(%d):", len(records)))
+	log.Debug(fmt.Sprintf("Results(%d):", len(records)))
 	for rindex, record := range records {
-		fmt.Println(fmt.Sprintf("Creating row %d/%d:", rindex+1, len(records)))
+		log.Debug(fmt.Sprintf("Creating row %d/%d:", rindex+1, len(records)))
 		report.AddRow(record)
 	}
 
 	for cindex, configColumn := range config.Columns {
-		fmt.Println(fmt.Sprintf("Processing column %d/%d:", cindex+1, len(config.Columns)))
+		log.Debug(fmt.Sprintf("Processing column %d/%d:", cindex+1, len(config.Columns)))
 		if configColumn.CanBatch {
 			columnRecords, err := o.query(configColumn, report.rows)
 			if err != nil {
@@ -62,7 +63,7 @@ func (o *Orchestrator) Execute() error {
 			}
 		} else {
 			for rindex, record := range report.rows {
-				fmt.Println(fmt.Sprintf("Processing row %d/%d:", rindex+1, len(report.rows)))
+				log.Debug(fmt.Sprintf("Processing row %d/%d:", rindex+1, len(report.rows)))
 				columnRecords, err := o.query(configColumn, []*Record{record})
 				if err != nil {
 					return err
@@ -102,7 +103,7 @@ func (o *Orchestrator) query(config *ConfigQuery, records []*Record) ([]*Record,
 		attempt := 1
 		maxAttempt := 10
 		for attempt < maxAttempt {
-			fmt.Println(fmt.Sprintf("Executing query:%s", query))
+			log.Debug(fmt.Sprintf("Executing query:%s", query))
 			results, err := client.Nrdb.Query(config.AccountId, nrdb.NRQL(query))
 			if err == nil {
 				if len(results.Results) > 0 {
