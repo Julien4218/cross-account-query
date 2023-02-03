@@ -87,7 +87,7 @@ func TestReportShouldOutputJson(t *testing.T) {
 	r.AddRow(NewRecord(NewDataMapBuilder().WithField("field1", 123).WithField("field2", 456).WithField("field3", 789).Build(), nil))
 	r.AddRow(NewRecord(NewDataMapBuilder().WithField("field1", 231).WithField("field2", 564).WithField("field3", 897).Build(), nil))
 	r.AddRow(NewRecord(NewDataMapBuilder().WithField("field1", 312).WithField("field2", 645).WithField("field3", 978).Build(), nil))
-	assert.Contains(t, r.Json(), "\"field1\":\"123\"")
+	assert.Contains(t, r.Json(), "\"field1\":123")
 }
 
 func TestReportShouldOutputAliasHeader(t *testing.T) {

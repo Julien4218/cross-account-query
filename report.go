@@ -42,14 +42,14 @@ func (r *Report) Json() string {
 					rowOutput += colName
 				}
 				rowOutput += "\":"
-				isNative := isValueNative(value)
-				if !isNative {
-					rowOutput += "\""
-				}
-				if colName == "timestamp" && aliasName == "" {
+				if colName == "timestamp" && aliasName != "" {
 					seconds, _ := strconv.ParseInt(value, 10, 64)
 					unix := time.UnixMilli(seconds)
 					value = unix.Format(time.RFC3339)
+				}
+				isNative := isValueNative(value)
+				if !isNative {
+					rowOutput += "\""
 				}
 				rowOutput += value
 				if !isNative {
