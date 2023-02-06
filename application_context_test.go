@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,5 +24,13 @@ func TestShouldNotReplaceEnvAndError(t *testing.T) {
 	_, err := replaceEnvVar(input)
 
 	assert.NotNil(t, err)
+}
 
+func TestShouldReplaceDateTime(t *testing.T) {
+	date, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
+	input := "some data with sys::now to be replaced"
+	output := replaceSystemVar(input, date)
+
+	expected := fmt.Sprintf("some data with 010220061504 to be replaced")
+	assert.Equal(t, expected, output)
 }

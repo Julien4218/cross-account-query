@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -40,6 +41,8 @@ func readFile(filename string) (*Config, error) {
 		return nil, err
 	}
 
+	replaced = replaceSystemVar(replaced, time.Now())
+
 	err2 := yaml.Unmarshal([]byte(replaced), &config)
 	if err2 != nil {
 		return nil, errors.New(fmt.Sprintf("couldn't unmarshal yaml %s detail:%v", filename, err2))
@@ -64,4 +67,23 @@ func replaceEnvVar(value string) (string, error) {
 		result = strings.ReplaceAll(result, match, replaced)
 	}
 	return result, nil
+}
+
+func replaceSystemVar(value string, date time.Time) string {
+	if len(value) == 0 {
+		return ""
+	}
+	result := value
+	re := regexp.MustCompile(`sys::(\w+)`)
+	for found := re.Find([]byte(result)); found != nil; found = re.Find([]byte(result)) {
+		match := string(found)
+		key := strings.ReplaceAll(match, "sys::", "")
+		replaced := ""
+		switch key {
+		case "now":
+			replaced = fmt.Sprintf("%02d%02d%04d%02d%02d", date.Month(), date.Day(), date.Year(), date.Hour(), date.Minute())
+		}
+		result = strings.ReplaceAll(result, match, replaced)
+	}
+	return result
 }
