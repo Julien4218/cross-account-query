@@ -26,11 +26,20 @@ func TestShouldNotReplaceEnvAndError(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestShouldReplaceDateTime(t *testing.T) {
+func TestShouldReplaceDateTimeNow(t *testing.T) {
 	date, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
-	input := "some data with sys::now to be replaced"
+	input := "some data with sys::datetimenow to be replaced"
 	output := replaceSystemVar(input, date)
 
 	expected := fmt.Sprintf("some data with 010220061504 to be replaced")
+	assert.Equal(t, expected, output)
+}
+
+func TestShouldReplaceDateNow(t *testing.T) {
+	date, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05Z")
+	input := "some data with sys::datenow to be replaced"
+	output := replaceSystemVar(input, date)
+
+	expected := fmt.Sprintf("some data with 01022006 to be replaced")
 	assert.Equal(t, expected, output)
 }

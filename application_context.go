@@ -80,7 +80,9 @@ func replaceSystemVar(value string, date time.Time) string {
 		key := strings.ReplaceAll(match, "sys::", "")
 		replaced := ""
 		switch key {
-		case "now":
+		case "datenow":
+			replaced = fmt.Sprintf("%02d%02d%04d", date.Month(), date.Day(), date.Year())
+		case "datetimenow":
 			replaced = fmt.Sprintf("%02d%02d%04d%02d%02d", date.Month(), date.Day(), date.Year(), date.Hour(), date.Minute())
 		}
 		result = strings.ReplaceAll(result, match, replaced)
